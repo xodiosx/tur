@@ -1,12 +1,12 @@
 TERMUX_PKG_HOMEPAGE=https://www.ppsspp.org/
 TERMUX_PKG_DESCRIPTION="PlayStation Portable emulator"
 TERMUX_PKG_LICENSE="GPL-2.0"
-TERMUX_PKG_MAINTAINER="@termux-user-repository"
+TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION="1.20.4"
 TERMUX_PKG_GIT_BRANCH="v${TERMUX_PKG_VERSION}"
+TERMUX_PKG_EXCLUDED_ARCHES="arm i686 x86_64"
 TERMUX_PKG_SRCURL="git+https://github.com/hrydgard/ppsspp"
-TERMUX_PKG_EXCLUDED_ARCHES="arm, i686, x86_64"
-TERMUX_PKG_DEPENDS="sdl3, sdl2, sdl2-ttf, sdl3-ttf, fontconfig, libcurl, glew, libpng, miniupnpc, zstd, zlib, libzip, libsnappy, libcpufeatures, ffmpeg"
+TERMUX_PKG_DEPENDS="libcurl, libpng, miniupnpc, zlib, libzip, libsnappy, ffmpeg, sdl2, sdl2-ttf"
 TERMUX_PKG_BUILD_DEPENDS="mesa-dev, libglvnd-dev, vulkan-headers, rapidjson, spirv-headers, spirv-tools"
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
@@ -15,9 +15,18 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DUSE_SYSTEM_FFMPEG=ON
 -DUSING_GLES2=OFF
 -DBUILD_TESTING=OFF
+-DCMAKE_PREFIX_PATH=${TERMUX_PREFIX}
+-DSDL2_INCLUDE_DIR=${TERMUX_PREFIX}/include/SDL2
+-DSDL2_LIBRARY=${TERMUX_PREFIX}/lib/libSDL2.so
+-DSDL2_TTF_INCLUDE_DIR=${TERMUX_PREFIX}/include/SDL2
+-DSDL2_TTF_LIBRARY=${TERMUX_PREFIX}/lib/libSDL2_ttf.so
 "
 
 termux_step_pre_configure() {
+	# Prevent GLEW from trying to include missing GL/glu.h
+	CFLAGS+=" -DGLEW_NO_GLU"
+	CXXFLAGS+=" -DGLEW_NO_GLU"
+
 	cd "$TERMUX_PKG_SRCDIR"
 	sed -i '120s/.*/#elif 0/' ppsspp_config.h
 	sed -i '403s/.*/#if 0/' Common/GPU/OpenGL/GLFeatures.cpp
