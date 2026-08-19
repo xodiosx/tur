@@ -27,7 +27,6 @@ termux_step_pre_configure() {
 	if [[ "$TERMUX_ON_DEVICE_BUILD" == "false" ]]; then
 		termux_error_exit "This package doesn't support cross-compiling."
 	fi
-	export PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-$TERMUX_PREFIX/lib/pkgconfig:$TERMUX_PREFIX/share/pkgconfig}"
 	export CFLAGS="-I$TERMUX_PREFIX/include"
 	export CPPFLAGS="-I$TERMUX_PREFIX/include"
 	export LDFLAGS+=" -L$TERMUX_PREFIX/lib -landroid-shmem"
