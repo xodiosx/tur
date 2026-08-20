@@ -4,14 +4,14 @@ TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION="1.20.4"
 TERMUX_PKG_GIT_BRANCH="v${TERMUX_PKG_VERSION}"
-TERMUX_PKG_EXCLUDED_ARCHES="arm i686 x86_64"
+
 TERMUX_PKG_SRCURL="git+https://github.com/hrydgard/ppsspp"
 TERMUX_PKG_DEPENDS="libcurl, libpng, miniupnpc, zlib, libzip, glew, libsnappy, ffmpeg, libcpufeatures, rapidjson, sdl2, sdl2-ttf, fontconfig"
 TERMUX_PKG_BUILD_DEPENDS="mesa-dev, libglvnd-dev, vulkan-headers, rapidjson, spirv-headers, spirv-tools"
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DCMAKE_SYSTEM_NAME=Linux
--DCMAKE_SYSTEM_PROCESSOR=aarch64
+-DCMAKE_SYSTEM_PROCESSOR=$CMAKE_PROC
 -DUSE_SYSTEM_FFMPEG=ON
 -DUSE_SYSTEM_LIBZIP=ON
 -DUSE_SYSTEM_SNAPPY=ON
@@ -27,10 +27,6 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 "
 
 termux_step_pre_configure() {
-	# Prevent GLEW from trying to include missing GL/glu.h
-	#CFLAGS+=" -DGLEW_NO_GLU"
-	#CXXFLAGS+=" -DGLEW_NO_GLU"
-
 	cd "$TERMUX_PKG_SRCDIR"
 	sed -i 's/Arm64EmitterTest();/\/\/ Arm64EmitterTest();/' UI/NativeApp.cpp
 	#sed -i '403s/.*/#if 0/' Common/GPU/OpenGL/GLFeatures.cpp
