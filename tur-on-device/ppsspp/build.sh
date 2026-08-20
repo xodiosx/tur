@@ -28,6 +28,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 termux_step_pre_configure() {
 	cd "$TERMUX_PKG_SRCDIR"
 	sed -i 's/Arm64EmitterTest();/\/\/ Arm64EmitterTest();/' UI/NativeApp.cpp
+	sed -i 's/ArmEmitterTest();/\/\/ ArmEmitterTest();/' UI/NativeApp.cpp
 	# Patch cpu_features so empty CMAKE_SYSTEM_PROCESSOR is inferred from compiler
 	sed -i '/set(PROCESSOR_IS_LOONGARCH FALSE)/a\
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "")\
