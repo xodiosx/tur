@@ -32,7 +32,7 @@ termux_step_pre_configure() {
 	#CXXFLAGS+=" -DGLEW_NO_GLU"
 
 	cd "$TERMUX_PKG_SRCDIR"
-	#sed -i '120s/.*/#elif 0/' ppsspp_config.h
+	sed -i 's/Arm64EmitterTest();/\/\/ Arm64EmitterTest();/' UI/NativeApp.cpp
 	#sed -i '403s/.*/#if 0/' Common/GPU/OpenGL/GLFeatures.cpp
 	#sed -i '456s/.*/#if 0/' Common/GPU/OpenGL/GLFeatures.cpp
 	#sed -i '194s/.*/#if 0/' Common/GPU/Vulkan/VulkanLoader.h
