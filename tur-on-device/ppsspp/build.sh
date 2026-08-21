@@ -44,9 +44,12 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 
 termux_step_pre_configure() {
 	cd "$TERMUX_PKG_SRCDIR"
+
+	# Disable Android-specific test calls
 	sed -i 's/Arm64EmitterTest();/\/\/ Arm64EmitterTest();/' UI/NativeApp.cpp
 	sed -i 's/ArmEmitterTest();/\/\/ ArmEmitterTest();/' UI/NativeApp.cpp
-	# Patch cpu_features so empty CMAKE_SYSTEM_PROCESSOR is inferred from compiler
+
+	# Patch cpu_features to infer CMAKE_SYSTEM_PROCESSOR from compiler (only supported arches)
 	sed -i '/set(PROCESSOR_IS_LOONGARCH FALSE)/a\
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "")\
 	if(CMAKE_C_COMPILER_TARGET MATCHES "aarch64|arm64")\
@@ -57,10 +60,6 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "")\
 		set(CMAKE_SYSTEM_PROCESSOR "x86_64")\
 	elseif(CMAKE_C_COMPILER_TARGET MATCHES "i686|i586|i486|i386")\
 		set(CMAKE_SYSTEM_PROCESSOR "i686")\
-	elseif(CMAKE_C_COMPILER_TARGET MATCHES "riscv64|riscv")\
-		set(CMAKE_SYSTEM_PROCESSOR "riscv64")\
-	elseif(CMAKE_C_COMPILER_TARGET MATCHES "loongarch64|loongarch")\
-		set(CMAKE_SYSTEM_PROCESSOR "loongarch64")\
 	elseif(CMAKE_C_COMPILER MATCHES "aarch64|arm64")\
 		set(CMAKE_SYSTEM_PROCESSOR "aarch64")\
 	elseif(CMAKE_C_COMPILER MATCHES "armv7|arm-linux-androideabi")\
@@ -69,26 +68,16 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "")\
 		set(CMAKE_SYSTEM_PROCESSOR "x86_64")\
 	elseif(CMAKE_C_COMPILER MATCHES "i686|i586|i486|i386")\
 		set(CMAKE_SYSTEM_PROCESSOR "i686")\
-	elseif(CMAKE_C_COMPILER MATCHES "riscv64|riscv")\
-		set(CMAKE_SYSTEM_PROCESSOR "riscv64")\
-	elseif(CMAKE_C_COMPILER MATCHES "loongarch64|loongarch")\
-		set(CMAKE_SYSTEM_PROCESSOR "loongarch64")\
 	else()\
-		message(FATAL_ERROR "Cannot infer CMAKE_SYSTEM_PROCESSOR from compiler")\
+		message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")\
 	endif()\
 endif()' \
 		ext/cmake/cpu_features/CMakeLists.txt
-	#sed -i '194s/.*/#if 0/' Common/GPU/Vulkan/VulkanLoader.h
-	#sed -i '192s/.*/#if 0/' Common/GPU/Vulkan/VulkanLoader.cpp
-	#sed -i '350s/.*/#if 1/' Common/GPU/Vulkan/VulkanLoader.cpp
-	#sed -i '503s/.*/#elif 0/' Common/GPU/Vulkan/VulkanLoader.cpp
-	#sed -i '752s/.*/#elif 0/' Common/GPU/Vulkan/VulkanLoader.cpp
-	#sed -i '155s/.*/#elif 0/' Common/GPU/Vulkan/VulkanContext.cpp
-	#sed -i '1063s/.*/#if 0/' Common/GPU/Vulkan/VulkanContext.cpp
-	#sed -i '145s/.*/#elif 1/' Core/Instance.cpp
-	#sed -i '182s/.*/#elif 1/' Core/Instance.cpp
-		find \
+
+	# Disable Android-specific code by renaming __ANDROID__ macro
+	find \
 		"$TERMUX_PKG_SRCDIR"/Common/GPU \
+		"$TERMUX_PKG_SRCDIR"/Common/VR \
 		"$TERMUX_PKG_SRCDIR"/Common/Log.h \
 		"$TERMUX_PKG_SRCDIR"/Common/MsgHandler.h \
 		"$TERMUX_PKG_SRCDIR"/UI \
