@@ -4,37 +4,28 @@ TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION="1.20.4"
 TERMUX_PKG_GIT_BRANCH="v${TERMUX_PKG_VERSION}"
-TERMUX_PKG_NO_STATICSPLIT=true
+
 TERMUX_PKG_SRCURL="git+https://github.com/hrydgard/ppsspp"
 TERMUX_PKG_DEPENDS="libcurl, libpng, miniupnpc, zlib, libzip, glew, libsnappy, ffmpeg, libcpufeatures, rapidjson, sdl2, sdl2-ttf, fontconfig"
 TERMUX_PKG_BUILD_DEPENDS="mesa-dev, libglvnd-dev, vulkan-headers, rapidjson, spirv-headers, spirv-tools"
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DCMAKE_SYSTEM_NAME=Linux
--DBUILD_TESTING=OFF
+-DUSE_SYSTEM_FFMPEG=ON
+-DUSE_SYSTEM_LIBZIP=ON
+-DUSE_SYSTEM_SNAPPY=ON
+-DUSE_WAYLAND_WSI=OFF
 -DUSING_EGL=ON
 -DUSING_FBDEV=OFF
--DUSING_GLES2=ON
 -DUSING_X11_VULKAN=ON
--DUSE_WAYLAND_WSI=OFF
+-DUSING_GLES2=ON
 -DUSE_VULKAN_DISPLAY_KHR=OFF
--DUSING_QT_UI=OFF
--DMOBILE_DEVICE=OFF
--DHEADLESS=ON
--DATLAS_TOOL=ON
--DUNITTEST=OFF
--DSIMULATOR=OFF
 -DLIBRETRO=OFF
--DUSE_LIBNX=OFF
--DUSE_FFMPEG=ON
--DUSE_DISCORD=OFF
--DUSE_MINIUPNPC=ON
--DUSE_SYSTEM_SNAPPY=ON
--DUSE_SYSTEM_FFMPEG=ON
 -DUSE_SYSTEM_FREETYPE=ON
 -DUSE_SYSTEM_LIBCHDR=OFF
 -DUSE_SYSTEM_LIBZIP=ON
--DUSE_SYSTEM_LIBSDL2=ON
+-DUSING_QT_UI=OFF
+-DHEADLESS=OFF
 -DUSE_SYSTEM_LIBPNG=ON
 -DUSE_SYSTEM_RAPIDJSON=ON
 -DUSE_SYSTEM_ZSTD=ON
@@ -43,7 +34,6 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DUSE_UBSAN=OFF
 -DUSE_CCACHE=OFF
 -DUSE_NO_MMAP=OFF
--DGOLD=OFF
 -DBUILD_TESTING=OFF
 -DCMAKE_PREFIX_PATH=${TERMUX_PREFIX}
 -DSDL2_INCLUDE_DIR=${TERMUX_PREFIX}/include/SDL2
@@ -97,25 +87,20 @@ endif()' \
 	#sed -i '1063s/.*/#if 0/' Common/GPU/Vulkan/VulkanContext.cpp
 	#sed -i '145s/.*/#elif 1/' Core/Instance.cpp
 	#sed -i '182s/.*/#elif 1/' Core/Instance.cpp
+		find \
+		"$TERMUX_PKG_SRCDIR"/Common/GPU \
+		"$TERMUX_PKG_SRCDIR"/Common/Log.h \
+		"$TERMUX_PKG_SRCDIR"/Common/MsgHandler.h \
+		"$TERMUX_PKG_SRCDIR"/UI \
+		"$TERMUX_PKG_SRCDIR"/ext/naett \
+		"$TERMUX_PKG_SRCDIR"/ppsspp_config.h \
+		-type f -print0 | xargs -0 sed -i \
+		-e 's/\([^A-Za-z0-9_]__ANDROID\)\(__[^A-Za-z0-9_]\)/\1__DISABLING_THIS_BECAUSE_IT_IS_FOR_BUILDING_AN_APK\2/g' \
+		-e 's/\([^A-Za-z0-9_]__ANDROID\)__$/\1_DISABLING_THIS_BECAUSE_IT_IS_FOR_BUILDING_AN_APK__/g'
 }
 
 termux_step_post_make_install() {
-	rm -rf "${TERMUX_PREFIX}/lib/*.a"
-
-	# Install the binary as "ppsspp" instead of "PPSSPPSDL"
-	install -Dm700 "$TERMUX_PKG_BUILDDIR/PPSSPPSDL" \
-		"$TERMUX_PREFIX/bin/ppsspp"
-
-	# Optional: create a symlink for backwards compatibility
-	ln -sf "$TERMUX_PREFIX/bin/ppsspp" "$TERMUX_PREFIX/bin/PPSSPPSDL"
-
-	# Copy assets as before
-	mkdir -p "$TERMUX_PREFIX/share/ppsspp"
-	cp -r "$TERMUX_PKG_BUILDDIR/assets" "$TERMUX_PREFIX/share/ppsspp/"
-
-	# Rename any references to PPSSPPSDL in text files inside the package
-
-	find "$TERMUX_PREFIX" -type f \
-		\( -name '*.desktop' -o -name '*.sh' -o -name '*.bash' -o -name '*.zsh' -o -name '*.conf' -o -name '*.ini' \) \
-		-exec sed -i 's/PPSSPPSDL/ppsspp/g' {} \;
+	# Create a convenience symlink: ppsspp -> PPSSPPSDL
+	cd $TERMUX_PREFIX/bin
+	ln -sf PPSSPPSDL "$TERMUX_PREFIX/bin/ppsspp"
 }
