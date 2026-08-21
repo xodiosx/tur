@@ -73,10 +73,22 @@ endif()' \
 }
 
 termux_step_post_make_install() {
-	install -Dm700 "$TERMUX_PKG_BUILDDIR/PPSSPPSDL" \
-		"$TERMUX_PREFIX/bin/PPSSPPSDL"
+	rm -rf "${TERMUX_PREFIX}/include/freetype2"
 
-	# PPSSPP looks for assets/ relative to its own binary.
+	# Install the binary as "ppsspp" instead of "PPSSPPSDL"
+	install -Dm700 "$TERMUX_PKG_BUILDDIR/PPSSPPSDL" \
+		"$TERMUX_PREFIX/bin/ppsspp"
+
+	# Optional: create a symlink for backwards compatibility
+	ln -sf "$TERMUX_PREFIX/bin/ppsspp" "$TERMUX_PREFIX/bin/PPSSPPSDL"
+
+	# Copy assets as before
 	mkdir -p "$TERMUX_PREFIX/share/ppsspp"
 	cp -r "$TERMUX_PKG_BUILDDIR/assets" "$TERMUX_PREFIX/share/ppsspp/"
+
+	# Rename any references to PPSSPPSDL in text files inside the package
+
+	find "$TERMUX_PREFIX" -type f \
+		\( -name '*.desktop' -o -name '*.sh' -o -name '*.bash' -o -name '*.zsh' -o -name '*.conf' -o -name '*.ini' \) \
+		-exec sed -i 's/PPSSPPSDL/ppsspp/g' {} \;
 }
