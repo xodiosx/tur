@@ -13,10 +13,6 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DCMAKE_BUILD_TYPE=Release
 -DCMAKE_SYSTEM_NAME=Linux
 -DCMAKE_SYSTEM_PROCESSOR=aarch64
--Ddetect_page_size_run_result=0
--Ddetect_page_size_run_result__TRYRUN_OUTPUT=4096
--Ddetect_cache_line_size_run_result=0
--Ddetect_cache_line_size_run_result__TRYRUN_OUTPUT=64
 -DUSE_WAYLAND=OFF
 -DUSE_X11=ON
 -DUSE_VULKAN=ON
@@ -26,6 +22,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 
 termux_step_pre_configure() {
 	sed -i '/function(detect_page_size)/a \ \ set(PAGE_SIZE 4096 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
+	sed -i '/function(detect_cache_line_size)/a \ \ set(CACHE_LINE_SIZE 64 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
 	LDFLAGS+=" -landroid-shmem"
 	CFLAGS+=" -fPIE"
 	CXXFLAGS+=" -fPIE"
