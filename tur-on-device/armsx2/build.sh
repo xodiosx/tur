@@ -5,7 +5,7 @@ TERMUX_PKG_MAINTAINER="@xodiosx"
 TERMUX_PKG_VERSION="2.6.9"
 TERMUX_PKG_SRCURL="git+https://github.com/ARMSX2/ARMSX2.git"
 TERMUX_PKG_GIT_BRANCH="main"
-TERMUX_PKG_DEPENDS="libc++, sdl2, ffmpeg, zstd, libcurl, freetype, libpng, libjpeg-turbo, libwebp, liblzma, vulkan-loader, libandroid-shmem, wayland, libx11, qt6-qtbase, qt6-qtwayland, libaio, libsoundtouch, libzip, shaderc"
+TERMUX_PKG_DEPENDS="libc++, sdl2, ffmpeg, zstd, libcurl, freetype, libpng, libjpeg-turbo, libwebp, liblzma, vulkan-loader, libandroid-shmem, libx11, qt6-qtbase, qt6-qtwayland, libaio, libsoundtouch, libzip, shaderc"
 TERMUX_PKG_BUILD_DEPENDS="mesa-dev, cmake, ninja, pkg-config, vulkan-headers"
 TERMUX_PKG_BUILD_IN_SRC=false
 
