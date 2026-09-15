@@ -20,9 +20,9 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 "
 
 termux_step_pre_configure() {
-    # 1. Inject libandroid-shmem to emulate POSIX shared memory for PS2 hardware mapping.
-    # 2. Add PIE flags to satisfy Android's W^X execution requirements for the JIT.
-    LDFLAGS+=" -landroid-shmem"
-    CFLAGS+=" -fPIE"
-    CXXFLAGS+=" -fPIE"
+	# 1. Inject libandroid-shmem to emulate POSIX shared memory for PS2 hardware mapping.
+	# 2. Add PIE flags to satisfy Android's W^X execution requirements for the JIT.
+	LDFLAGS+=" -landroid-shmem"
+	CFLAGS+=" -fPIE"
+	CXXFLAGS+=" -fPIE"
 }
