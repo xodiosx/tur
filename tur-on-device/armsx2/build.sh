@@ -23,6 +23,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 "
 
 termux_step_pre_configure() {
+	sed -i '/function(detect_page_size)/a \ \ set(PAGE_SIZE 4096 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
 	LDFLAGS+=" -landroid-shmem"
 	CFLAGS+=" -fPIE"
 	CXXFLAGS+=" -fPIE"
