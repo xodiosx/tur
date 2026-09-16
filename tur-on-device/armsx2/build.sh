@@ -29,8 +29,9 @@ termux_step_pre_configure() {
 	sed -i '/function(detect_page_size)/a \ \ set(PAGE_SIZE 4096 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
 	sed -i '/function(detect_cache_line_size)/a \ \ set(CACHE_LINE_SIZE 64 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
 	sed -i 's/find_package(Libbacktrace)/# find_package(Libbacktrace)/g' "${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
-	sed -i 's/OVERRIDE_HOST_PAGE_SIZE/4096/g; s/OVERRIDE_HOST_CACHE_LINE_SIZE/64/g' \
-	"${TERMUX_PKG_SRCDIR}/common/Pcsx2Defs.h"
+	# --- PAGE/CACHE SIZE FIX ---
+	sed -i 's/ = OVERRIDE_HOST_PAGE_SIZE;/ = 4096;/' "${TERMUX_PKG_SRCDIR}/common/Pcsx2Defs.h"
+	sed -i 's/ = OVERRIDE_HOST_CACHE_LINE_SIZE;/ = 64;/' "${TERMUX_PKG_SRCDIR}/common/Pcsx2Defs.h"
 	# --- UDEV FIX: Termux has no libudev ---
 	sed -i 's/PkgConfig::LIBUDEV//g' "${TERMUX_PKG_SRCDIR}/pcsx2/CMakeLists.txt"
 	sed -i 's/pkg_check_modules(LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
