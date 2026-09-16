@@ -87,5 +87,13 @@ termux_step_make_install() {
 	cmake \
 		--install "${TERMUX_PKG_BUILDDIR}" \
 		--prefix "${TERMUX_PREFIX}" \
-		--verbose
+		--verbose || true
+
+	mkdir -p "${TERMUX_PREFIX}/bin"
+	install -Dm755 \
+		"${TERMUX_PKG_BUILDDIR}/bin/armsx2-qt" \
+		"${TERMUX_PREFIX}/bin/armsx2-qt" \
+	|| cp -a \
+		"${TERMUX_PKG_BUILDDIR}/bin/armsx2-qt" \
+		"${TERMUX_PREFIX}/bin/armsx2-qt"
 }
