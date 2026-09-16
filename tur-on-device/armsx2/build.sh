@@ -6,7 +6,7 @@ TERMUX_PKG_VERSION="2.6.9"
 TERMUX_PKG_SRCURL="git+https://github.com/ARMSX2/ARMSX2.git"
 TERMUX_PKG_GIT_BRANCH="master"
 TERMUX_PKG_EXCLUDED_ARCHES="arm i686 x86_64"
-TERMUX_PKG_DEPENDS="libpcap, libc++, sdl3, ffmpeg, zstd, libcurl, freetype, libpng, libjpeg-turbo, libwebp, liblzma, vulkan-loader, libandroid-shmem, libx11, qt6-qtbase, libaio, libsoundtouch, libzip, shaderc, plutovg"
+TERMUX_PKG_DEPENDS="libpcap, libc++, sdl3, ffmpeg, zstd, libcurl, freetype, libpng, libjpeg-turbo, libwebp, liblzma, vulkan-loader, libandroid-shmem, libandroid-stub, libxrandr, libx11, qt6-qtbase, libaio, libsoundtouch, libzip, shaderc, plutovg"
 TERMUX_PKG_BUILD_DEPENDS="mesa-dev, cmake, ninja, pkg-config, vulkan-headers, extra-cmake-modules, qt6-qttools, qt6-qttools-cross-tools"
 TERMUX_PKG_BUILD_IN_SRC=false
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
@@ -58,7 +58,7 @@ termux_step_pre_configure() {
 		-DPLUTOSVG_BUILD_EXAMPLES=OFF
 	cmake --build "$PLUTOSVG_SRC/build" --target install
 
-	LDFLAGS+=" -landroid-shmem"
+	LDFLAGS+=" -landroid-shmem -landroid -lXrandr"
 	CFLAGS+=" -fPIE"
 	CXXFLAGS+=" -fPIE"
 }
