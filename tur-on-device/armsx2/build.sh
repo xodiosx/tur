@@ -55,32 +55,20 @@ termux_step_pre_configure() {
 	}
 	EOF
 
-	# --- JNI STUB FIX: Termux has no Java VM, so provide stubs for all JNI bridges ---
-	cat > "${TERMUX_PKG_SRCDIR}/pcsx2/armsx2_termux_stubs.cpp" <<-'EOF'
-	// Termux patch: JNI bridge functions require a Java VM, which Termux lacks.
-	// File I/O falls back to POSIX paths; rumble and achievement sounds are no-ops.
+	# --- JNI STUB FIX: Un-guard and patch AndroidStubs.cpp ---
+	local STUB_FILE="${TERMUX_PKG_SRCDIR}/pcsx2/Android/AndroidStubs.cpp"
+	if [ -f "$STUB_FILE" ]; then
+		# 1. Remove #ifdef ENABLE_LIBRETRO guard so stubs compile for Qt desktop
+		sed -i 's/#ifdef ENABLE_LIBRETRO/#if 1/g' "$STUB_FILE"
 
-	#include "common/FileSystem.h"
-	#include "Input/InputManager.h"
+		# 2. Append missing Native::onPadRumble stub
+		cat << 'EOF' >> "$STUB_FILE"
 
-	namespace FileSystem
-	{
-		FILE* CreateFileViaJava(const char* path) { return nullptr; }
-		int OpenFDFileContent(const char* path) { return -1; }
-		bool CreateDirectoryViaJava(const char* path) { return false; }
-	}
-
-	namespace Native
-	{
-		void onPadRumble(int pad, int motor, int intensity) {}
-	}
-
-	namespace Common
-	{
-		void PlaySoundAsync(const char* path) {}
-	}
-	EOF
-	echo 'target_sources(PCSX2 PRIVATE armsx2_termux_stubs.cpp)' >> "${TERMUX_PKG_SRCDIR}/pcsx2/CMakeLists.txt"
+namespace Native {
+    void onPadRumble(int id, int low, int high) {}
+}
+EOF
+	fi
 
 	# --- PLUTOSVG: build and install into $TERMUX_PREFIX ---
 	local PLUTOSVG_SRC="${TERMUX_PKG_CACHEDIR}/plutosvg"
@@ -92,4 +80,12 @@ termux_step_pre_configure() {
 		-DCMAKE_BUILD_TYPE=Release \
 		-DPLUTOSVG_BUILD_EXAMPLES=OFF
 	cmake --build "$PLUTOSVG_SRC/build" --target install
+}
+
+
+termux_step_make_install() {
+	cmake \
+		--install "${TERMUX_PKG_BUILDDIR}" \
+		--prefix "${TERMUX_PREFIX}" \
+		--verbose
 }
