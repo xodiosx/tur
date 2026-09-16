@@ -96,4 +96,7 @@ termux_step_make_install() {
 	|| cp -a \
 		"${TERMUX_PKG_BUILDDIR}/bin/armsx2-qt" \
 		"${TERMUX_PREFIX}/bin/armsx2-qt"
+		# DON'T do this — lib/ contains static archives that don't belong in the package
+	cp -a "${TERMUX_PKG_BUILDDIR}/bin/." "${TERMUX_PREFIX}/bin/"  || true
+	cp -a "${TERMUX_PKG_BUILDDIR}/lib/*.so" "${TERMUX_PREFIX}/lib/"  || true
 }
