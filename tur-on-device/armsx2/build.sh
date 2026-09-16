@@ -7,7 +7,7 @@ TERMUX_PKG_SRCURL="git+https://github.com/ARMSX2/ARMSX2.git"
 TERMUX_PKG_GIT_BRANCH="master"
 TERMUX_PKG_EXCLUDED_ARCHES="arm i686 x86_64"
 TERMUX_PKG_DEPENDS="libpcap, libc++, sdl3, ffmpeg, zstd, libcurl, freetype, libpng, libjpeg-turbo, libwebp, liblzma, vulkan-loader, libandroid-shmem, libandroid-stub, libxrandr, libx11, qt6-qtbase, libaio, libsoundtouch, libzip, shaderc, plutovg"
-TERMUX_PKG_BUILD_DEPENDS="mesa-dev, cmake, ninja, pkg-config, vulkan-headers, extra-cmake-modules, qt6-qttools, qt6-qttools-cross-tools"
+TERMUX_PKG_BUILD_DEPENDS="mesa-dev, cmake, ninja, pkg-config, vulkan-headers, extra-cmake-modules, qt6-qttools-cross-tools"
 TERMUX_PKG_BUILD_IN_SRC=false
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DCMAKE_BUILD_TYPE=Release
@@ -46,8 +46,34 @@ termux_step_pre_configure() {
 		drive.clear();
 	}
 	EOF
+	# --- JNI STUB FIX: Termux has no Java VM ---
+	cat > "${TERMUX_PKG_SRCDIR}/pcsx2/armsx2_termux_stubs.cpp" <<-'EOF'
+	// Termux patch: JNI bridge functions require a Java VM, which Termux lacks.
+	// File I/O falls back to POSIX paths; rumble and achievement sounds are no-ops.
 
-	# Compile and install plutosvg into $TERMUX_PREFIX
+	#include "common/FileSystem.h"
+	#include "Input/InputManager.h"
+
+	namespace FileSystem
+	{
+		FILE* CreateFileViaJava(const char* path) { return nullptr; }
+		int OpenFDFileContent(const char* path) { return -1; }
+		bool CreateDirectoryViaJava(const char* path) { return false; }
+	}
+
+	namespace Native
+	{
+		void onPadRumble(int pad, int motor, int intensity) {}
+	}
+
+	namespace Common
+	{
+		void PlaySoundAsync(const char* path) {}
+	}
+	EOF
+	sed -i '/target_sources(PCSX2 PRIVATE/a \ \ armsx2_termux_stubs.cpp' \
+		"${TERMUX_PKG_SRCDIR}/pcsx2/CMakeLists.txt"
+	# --- plutosvg: build and install into $TERMUX_PREFIX ---
 	local PLUTOSVG_SRC="${TERMUX_PKG_CACHEDIR}/plutosvg"
 	if [ ! -d "$PLUTOSVG_SRC" ]; then
 		git clone --recursive https://github.com/sammycage/plutosvg.git "$PLUTOSVG_SRC"
