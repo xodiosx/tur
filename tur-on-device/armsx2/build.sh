@@ -38,6 +38,25 @@ termux_step_pre_configure() {
 		"${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
 	sed -i 's/find_package(PkgConfig.*LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
 		"${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
+	# --- UDEV FIX: Replace Linux DriveUtility.cpp with a no-op stub ---
+	cat > "${TERMUX_PKG_SRCDIR}/pcsx2/CDVD/Linux/DriveUtility.cpp" <<-'EOF'
+	// SPDX-FileCopyrightText: 2002-2026 PCSX2 Dev Team
+	// SPDX-License-Identifier: GPL-3.0+
+	// Termux patch: libudev is not available on Android, so optical drive
+	// enumeration is stubbed out. This is not a functional loss on Android.
+	
+	#include "CDVD/CDVDdiscReader.h"
+	
+	std::vector<std::string> GetOpticalDriveList()
+	{
+		return {};
+	}
+	
+	void GetValidDrive(std::string& drive)
+	{
+		drive.clear();
+	}
+	EOF
 
 	# Compile and install plutosvg into $TERMUX_PREFIX
 	local PLUTOSVG_SRC="${TERMUX_PKG_CACHEDIR}/plutosvg"
