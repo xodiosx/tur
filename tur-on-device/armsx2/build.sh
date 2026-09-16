@@ -25,6 +25,14 @@ termux_step_pre_configure() {
 	sed -i '/function(detect_page_size)/a \ \ set(PAGE_SIZE 4096 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
 	sed -i '/function(detect_cache_line_size)/a \ \ set(CACHE_LINE_SIZE 64 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
 	sed -i 's/find_package(Libbacktrace)/# find_package(Libbacktrace)/g' "${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
+
+	# --- UDEV FIX: Termux has no libudev ---
+	sed -i 's/PkgConfig::LIBUDEV//g' "${TERMUX_PKG_SRCDIR}/pcsx2/CMakeLists.txt"
+	sed -i 's/pkg_check_modules(LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
+		"${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
+	sed -i 's/find_package(PkgConfig.*LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
+		"${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
+
 	# Compile and install plutosvg into $TERMUX_PREFIX
 	local PLUTOSVG_SRC="${TERMUX_PKG_CACHEDIR}/plutosvg"
 	if [ ! -d "$PLUTOSVG_SRC" ]; then
