@@ -19,39 +19,33 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DUSE_QT=ON
 -DENABLE_TESTS=OFF
 -DUSE_BACKTRACE=OFF
--DPAGE_SIZE=4096
--DCACHE_LINE_SIZE=64
--DOVERRIDE_HOST_PAGE_SIZE=4096
--DOVERRIDE_HOST_CACHE_LINE_SIZE=64
 "
 
 termux_step_pre_configure() {
-	sed -i '/function(detect_page_size)/a \ \ set(PAGE_SIZE 4096 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
-	sed -i '/function(detect_cache_line_size)/a \ \ set(CACHE_LINE_SIZE 64 PARENT_SCOPE)\n \ return()' "${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
 	sed -i 's/find_package(Libbacktrace)/# find_package(Libbacktrace)/g' "${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
 	# --- PAGE/CACHE SIZE FIX ---
 	sed -i 's/ = OVERRIDE_HOST_PAGE_SIZE;/ = 4096;/' "${TERMUX_PKG_SRCDIR}/common/Pcsx2Defs.h"
 	sed -i 's/ = OVERRIDE_HOST_CACHE_LINE_SIZE;/ = 64;/' "${TERMUX_PKG_SRCDIR}/common/Pcsx2Defs.h"
-	# --- UDEV FIX: Termux has no libudev ---
+	# --- UDEV FIX: strip libudev from CMake ---
 	sed -i 's/PkgConfig::LIBUDEV//g' "${TERMUX_PKG_SRCDIR}/pcsx2/CMakeLists.txt"
 	sed -i 's/pkg_check_modules(LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
 		"${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
 	sed -i 's/find_package(PkgConfig.*LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
 		"${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
-	# --- UDEV FIX: Replace Linux DriveUtility.cpp with a no-op stub ---
+	# --- UDEV FIX: replace Linux DriveUtility.cpp with a no-op stub ---
 	cat > "${TERMUX_PKG_SRCDIR}/pcsx2/CDVD/Linux/DriveUtility.cpp" <<-'EOF'
 	// SPDX-FileCopyrightText: 2002-2026 PCSX2 Dev Team
 	// SPDX-License-Identifier: GPL-3.0+
 	// Termux patch: libudev is not available on Android, so optical drive
 	// enumeration is stubbed out. This is not a functional loss on Android.
-	
+
 	#include "CDVD/CDVDdiscReader.h"
-	
+
 	std::vector<std::string> GetOpticalDriveList()
 	{
 		return {};
 	}
-	
+
 	void GetValidDrive(std::string& drive)
 	{
 		drive.clear();
