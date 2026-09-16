@@ -19,13 +19,12 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DUSE_QT=ON
 -DENABLE_TESTS=OFF
 -DUSE_BACKTRACE=OFF
+-DHOST_PAGE_SIZE=4096
+-DHOST_CACHE_LINE_SIZE=64
 "
 
 termux_step_pre_configure() {
 	sed -i 's/find_package(Libbacktrace)/# find_package(Libbacktrace)/g' "${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
-	# --- PAGE/CACHE SIZE FIX ---
-	sed -i 's/ = OVERRIDE_HOST_PAGE_SIZE;/ = 4096;/' "${TERMUX_PKG_SRCDIR}/common/Pcsx2Defs.h"
-	sed -i 's/ = OVERRIDE_HOST_CACHE_LINE_SIZE;/ = 64;/' "${TERMUX_PKG_SRCDIR}/common/Pcsx2Defs.h"
 	# --- UDEV FIX: strip libudev from CMake ---
 	sed -i 's/PkgConfig::LIBUDEV//g' "${TERMUX_PKG_SRCDIR}/pcsx2/CMakeLists.txt"
 	sed -i 's/pkg_check_modules(LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
