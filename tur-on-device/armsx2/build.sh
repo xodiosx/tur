@@ -11,16 +11,12 @@ TERMUX_PKG_BUILD_DEPENDS="mesa-dev, cmake, ninja, pkg-config, vulkan-headers, ex
 TERMUX_PKG_BUILD_IN_SRC=false
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DCMAKE_BUILD_TYPE=Release
--DCMAKE_SYSTEM_NAME=Linux
--DCMAKE_SYSTEM_PROCESSOR=aarch64
 -DUSE_WAYLAND=OFF
 -DUSE_X11=ON
 -DUSE_VULKAN=ON
 -DUSE_QT=ON
 -DENABLE_TESTS=OFF
 -DUSE_BACKTRACE=OFF
--DHOST_PAGE_SIZE=4096
--DHOST_CACHE_LINE_SIZE=64
 "
 
 termux_step_pre_configure() {
@@ -50,9 +46,7 @@ termux_step_pre_configure() {
 		drive.clear();
 	}
 	EOF
-	# --- CACHE LINE SIZE FIX: add early-out that upstream forgot ---
-	sed -i 's|^function(detect_cache_line_size)$|&\n\tif(DEFINED HOST_CACHE_LINE_SIZE)\n\t\tmessage(STATUS "Host cache line size (preset): ${HOST_CACHE_LINE_SIZE}")\n\t\treturn()\n\tendif()|' \
-	"${TERMUX_PKG_SRCDIR}/cmake/Pcsx2Utils.cmake"
+
 	# Compile and install plutosvg into $TERMUX_PREFIX
 	local PLUTOSVG_SRC="${TERMUX_PKG_CACHEDIR}/plutosvg"
 	if [ ! -d "$PLUTOSVG_SRC" ]; then
