@@ -84,6 +84,20 @@ termux_step_pre_configure() {
 		-DPLUTOSVG_BUILD_EXAMPLES=OFF
 	cmake --build "$PLUTOSVG_SRC/build" --target install
 
+termux_step_pre_configure() {
+	local STUB_FILE="${TERMUX_PKG_SRCDIR}/pcsx2/Android/AndroidStubs.cpp"
+
+	# 1. Remove the #ifdef ENABLE_LIBRETRO guard so stubs compile for Qt
+	sed -i 's/#ifdef ENABLE_LIBRETRO/#if 1/g' "$STUB_FILE"
+
+	# 2. Re-add Native::onPadRumble stub at the end of AndroidStubs.cpp
+	cat << 'EOF' >> "$STUB_FILE"
+
+	namespace Native {
+	void onPadRumble(int id, int low, int high) {}
+	}
+	EOF
+	}
 	LDFLAGS+=" -landroid-shmem -landroid -lXrandr"
 	CFLAGS+=" -fPIE"
 	CXXFLAGS+=" -fPIE"
