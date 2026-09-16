@@ -20,13 +20,21 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 "
 
 termux_step_pre_configure() {
+	# --- LINKING & COMPILATION FLAGS ---
+	LDFLAGS+=" -landroid-shmem -landroid -lXrandr"
+	CFLAGS+=" -fPIE"
+	CXXFLAGS+=" -fPIE"
+
+	# --- LIBBACKTRACE FIX ---
 	sed -i 's/find_package(Libbacktrace)/# find_package(Libbacktrace)/g' "${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
+
 	# --- UDEV FIX: strip libudev from CMake ---
 	sed -i 's/PkgConfig::LIBUDEV//g' "${TERMUX_PKG_SRCDIR}/pcsx2/CMakeLists.txt"
 	sed -i 's/pkg_check_modules(LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
 		"${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
 	sed -i 's/find_package(PkgConfig.*LIBUDEV.*/set(LIBUDEV_FOUND FALSE)/g' \
 		"${TERMUX_PKG_SRCDIR}/cmake/SearchForStuff.cmake"
+
 	# --- UDEV FIX: replace Linux DriveUtility.cpp with a no-op stub ---
 	cat > "${TERMUX_PKG_SRCDIR}/pcsx2/CDVD/Linux/DriveUtility.cpp" <<-'EOF'
 	// SPDX-FileCopyrightText: 2002-2026 PCSX2 Dev Team
@@ -46,33 +54,23 @@ termux_step_pre_configure() {
 		drive.clear();
 	}
 	EOF
-	# --- JNI STUB FIX: Termux has no Java VM ---
-	cat > "${TERMUX_PKG_SRCDIR}/pcsx2/armsx2_termux_stubs.cpp" <<-'EOF'
-	// Termux patch: JNI bridge functions require a Java VM, which Termux lacks.
-	// File I/O falls back to POSIX paths; rumble and achievement sounds are no-ops.
 
-	#include "common/FileSystem.h"
-	#include "Input/InputManager.h"
+	# --- JNI STUB FIX: Un-guard and patch AndroidStubs.cpp ---
+	local STUB_FILE="${TERMUX_PKG_SRCDIR}/pcsx2/Android/AndroidStubs.cpp"
+	if [ -f "$STUB_FILE" ]; then
+		# 1. Remove #ifdef ENABLE_LIBRETRO guard so stubs compile for Qt desktop
+		sed -i 's/#ifdef ENABLE_LIBRETRO/#if 1/g' "$STUB_FILE"
 
-	namespace FileSystem
-	{
-		FILE* CreateFileViaJava(const char* path) { return nullptr; }
-		int OpenFDFileContent(const char* path) { return -1; }
-		bool CreateDirectoryViaJava(const char* path) { return false; }
-	}
+		# 2. Append missing Native::onPadRumble stub
+		cat << 'EOF' >> "$STUB_FILE"
 
-	namespace Native
-	{
-		void onPadRumble(int pad, int motor, int intensity) {}
-	}
+namespace Native {
+    void onPadRumble(int id, int low, int high) {}
+}
+EOF
+	fi
 
-	namespace Common
-	{
-		void PlaySoundAsync(const char* path) {}
-	}
-	EOF
-	echo 'target_sources(PCSX2 PRIVATE armsx2_termux_stubs.cpp)' >> "${TERMUX_PKG_SRCDIR}/pcsx2/CMakeLists.txt"
-	# --- plutosvg: build and install into $TERMUX_PREFIX ---
+	# --- PLUTOSVG: build and install into $TERMUX_PREFIX ---
 	local PLUTOSVG_SRC="${TERMUX_PKG_CACHEDIR}/plutosvg"
 	if [ ! -d "$PLUTOSVG_SRC" ]; then
 		git clone --recursive https://github.com/sammycage/plutosvg.git "$PLUTOSVG_SRC"
@@ -82,8 +80,4 @@ termux_step_pre_configure() {
 		-DCMAKE_BUILD_TYPE=Release \
 		-DPLUTOSVG_BUILD_EXAMPLES=OFF
 	cmake --build "$PLUTOSVG_SRC/build" --target install
-
-	LDFLAGS+=" -landroid-shmem -landroid -lXrandr"
-	CFLAGS+=" -fPIE"
-	CXXFLAGS+=" -fPIE"
 }
