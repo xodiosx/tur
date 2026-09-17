@@ -5,7 +5,7 @@ TERMUX_PKG_MAINTAINER="Termux Community"
 TERMUX_PKG_VERSION="2.6.9"
 TERMUX_PKG_SRCURL="git+https://github.com/ARMSX2/ARMSX2.git"
 TERMUX_PKG_GIT_BRANCH="master"
-#TERMUX_PKG_EXCLUDED_ARCHES="arm i686 x86_64"
+TERMUX_PKG_EXCLUDED_ARCHES="arm i686"
 TERMUX_PKG_DEPENDS="libpcap, libc++, sdl3, ffmpeg, zstd, libcurl, freetype, libpng, libjpeg-turbo, libwebp, liblzma, vulkan-loader, libglvnd, libandroid-shmem, libandroid-stub, libxrandr, libx11, qt6-qtbase, libaio, libsoundtouch, libzip, shaderc, plutovg"
 TERMUX_PKG_BUILD_DEPENDS="mesa-dev, cmake, ninja, pkg-config, vulkan-headers, extra-cmake-modules, qt6-qttools-cross-tools"
 TERMUX_PKG_BUILD_IN_SRC=false
@@ -17,16 +17,13 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DUSE_OPENGL=ON
 -DUSE_EGL=ON
 -DUSE_QT=ON
+-DENABLE_QT_DEBUGGER=OFF
 -DENABLE_TESTS=OFF
 -DUSE_BACKTRACE=OFF
 "
 
 	if [ "$TERMUX_ARCH" = "x86_64" ]; then
 	TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=x86_64 -DDISABLE_ADVANCE_SIMD=ON"
-	fi
-
-	if [ "$TERMUX_ARCH" = "i686" ]; then
-	TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=i686 -DDISABLE_ADVANCE_SIMD=ON"
 	fi
 
 termux_step_pre_configure() {
@@ -94,6 +91,8 @@ EOF
 
 
 termux_step_make_install() {
+	#rm -f "${TERMUX_PKG_BUILDDIR}/lib/*.a" || true
+
 	cmake \
 		--install "${TERMUX_PKG_BUILDDIR}" \
 		--prefix "${TERMUX_PREFIX}" \
@@ -109,4 +108,6 @@ termux_step_make_install() {
 		# DON'T do this — lib/ contains static archives that don't belong in the package
 	cp -a "${TERMUX_PKG_BUILDDIR}/bin/." "${TERMUX_PREFIX}/bin/"  || true
 	cp -a "${TERMUX_PKG_BUILDDIR}/lib/*.so" "${TERMUX_PREFIX}/lib/"  || true
+	rm -f "${TERMUX_PREFIX}/lib/*.a" || true
+		
 }
