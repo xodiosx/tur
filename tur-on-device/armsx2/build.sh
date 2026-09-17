@@ -109,5 +109,4 @@ termux_step_make_install() {
 	cp -a "${TERMUX_PKG_BUILDDIR}/bin/." "${TERMUX_PREFIX}/bin/"  || true
 	cp -a "${TERMUX_PKG_BUILDDIR}/lib/*.so" "${TERMUX_PREFIX}/lib/"  || true
 	rm -f "${TERMUX_PREFIX}/lib/*.a" || true
-		
 }
